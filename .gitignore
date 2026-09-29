@@ -43,8 +43,21 @@ captures/
 *.nar
 *.ear
 *.zip
+!/allure-results.zip
 *.tar.gz
 *.rar
 
 ### Gradle ###
 !gradle/wrapper/gradle-wrapper.jar
+
+# Local Android tooling state
+.android/
+.android-sdk-local/
+
+.kotlin/
+analytics.settings
+
+# Generated test reports
+/allure-results/
+/allure-report/
+/allure-results.tar

@@ -1,121 +1,40 @@
-# Дипломный проект — автоматизация и Allure
+# Автоматизация UI-тестов
 
-## 1. Что добавлено в проект
+## Стек и устройство тестов
 
-### UI-тесты
+Тесты написаны на Java 17 с JUnit 4 и AndroidX Test. Для UI используются Espresso, для popup-меню, системных диалогов и ожидания элементов — UiAutomator. Экраны оформлены как Page Objects; сценарии распределены по классам в соответствии с функциями приложения.
 
-Тесты находятся в:
+Для отчётов подключён Allure Kotlin Android 2.4.0: добавлены `@Epic`, `@Feature`, `@DisplayName`, `@Description`, шаги и скриншоты при падении. В `TestBase` настроены запуск Activity, сброс сохранённой авторизации и начальный экран. Тесты не используют `Thread.sleep()` и не зависят от порядка запуска.
 
-`app/src/androidTest/java/ru/edu/qamid/tests/`
+## Классы тестов
 
-- `TestBase.kt` — общая настройка тестов, запуск Activity, ожидание экранов, авторизация и выход.
-- `AuthTest.kt` — авторизация и выход из учётной записи.
-- `NavigationTest.kt` — боковое меню, News, тематические цитаты и раскрытие карточки.
-- `NewsTest.kt` — список новостей, сортировка, фильтр и панель управления.
+- `AuthTest` — успешный вход, неверные данные и пустые поля;
+- `NavigationTest` — News через меню и ALL NEWS, тематические цитаты и выход;
+- `NewsFilterTest` — сортировка и фильтры списка новостей;
+- `NewsTest` — панель управления, создание, редактирование, удаление, статусы и обязательные поля;
+- `QuotesTest` — раскрытие и сворачивание цитаты.
 
-Используется Espresso. Для ожидания экранов после сетевых операций используется UiAutomator только как механизм синхронизации; взаимодействия с UI выполняются через Espresso.
+Реализовано 34 метода `@Test`, сопоставленных с 33 кейсами в `Cases.xlsx`.
 
-В тестах соблюдается требование диплома: действие сопровождается проверкой результата.
+## Запуск
 
-## 2. Allure
-
-В `app/build.gradle` добавлены зависимости Allure Kotlin Android 2.4.0 и JUnit4-интеграция.
-
-Тестовый runner:
-
-`io.qameta.allure.android.runners.AllureAndroidJUnitRunner`
-
-Результаты сохраняются в каталоге `allure-results` внутри файлового каталога тестового приложения.
-
-В `app/src/androidTest/resources/allure.properties` задано:
-
-`allure.results.directory=allure-results`
-
-Для скриншотов при падении используется `ScreenshotRule` с режимом `FAILURE`.
-
-## 3. Сохранение APK
-
-В `gradle.properties` добавлен обязательный для диплома параметр:
-
-`android.injected.androidTest.leaveApksInstalledAfterRun=true`
-
-Он предотвращает удаление APK приложения после запуска instrumentation-тестов.
-
-## 4. Запуск тестов
-
-Из корня проекта:
-
-```text
-./gradlew connectedDebugAndroidTest
+```powershell
+.\gradlew.bat assembleDebug assembleDebugAndroidTest
+.\gradlew.bat connectedDebugAndroidTest
 ```
 
-В Windows:
+Для запуска нужны Android API 36, сеть, доступный backend и учётная запись `login2` / `password2`. Для операций панели управления требуются права администратора.
 
-```text
-gradlew.bat connectedDebugAndroidTest
+## Allure
+
+После тестового прогона результаты выгружаются и архивируются командой:
+
+```powershell
+.\scripts\pull-allure-results.bat
 ```
 
-Для запуска отдельного класса:
+Скрипт сохраняет реальные результаты в `allure-results/` и `allure-results.zip`. Для HTML-отчёта при установленном Allure CLI выполните:
 
-```text
-gradlew.bat connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=ru.edu.qamid.tests.AuthTest
-```
-
-## 5. Выгрузка Allure results с эмулятора
-
-После выполнения тестов определить подключённое устройство:
-
-```text
-adb devices
-```
-
-Для текущего applicationId `ru.edu.qamid` результаты можно выгрузить из приватного каталога приложения:
-
-```text
-adb exec-out run-as ru.edu.qamid sh -c "cd /data/data/ru.edu.qamid/files && tar cf - allure-results" > allure-results.tar
-```
-
-После этого распаковать архив в каталог `allure-results`.
-
-## 6. Генерация HTML-отчёта
-
-При установленном Allure Report:
-
-```text
+```powershell
 allure generate allure-results -o allure-report --clean
 ```
-
-Для просмотра:
-
-```text
-allure open allure-report
-```
-
-Либо:
-
-```text
-allure serve allure-results
-```
-
-## 7. Что должно попасть в итоговый архив
-
-Рекомендуемая структура:
-
-```text
-Diplom/
-├── app/
-├── gradle/
-├── gradlew
-├── gradlew.bat
-├── build.gradle
-├── settings.gradle
-├── gradle.properties
-├── Plan.md
-├── Cases.xlsx
-├── Check.xlsx
-├── AUTOMATION.md
-├── Result.md
-└── allure-report/
-```
-
-В архив не требуется включать `.gradle`, `app/build` и другие сгенерированные каталоги, если они не нужны для демонстрации.
